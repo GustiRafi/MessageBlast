@@ -3,39 +3,53 @@ const venom = require('venom-bot')
 let client;
 
 const connectWhatsapp = async (req, res) => {
-    if(!client){
-        client = await venom.create({
-            session: "whatsappSender",
-            multidevice: true,
-            headless: true,
-            catchQR: (base64Qrimg) => {
-                res.json({
+    try {
+        if (!client) {
+            client = await venom.create({
+                session: "sender",
+                multidevice: true,
+                headless: true,
+                catchQR: (base64Qrimg) => {
+                    // Pastikan hanya mengirim response QR code jika belum ada yang dikirim
+                    if (!res.headersSent) {
+                        return res.json({
+                            code: 200,
+                            status: 'success get qrcode',
+                            qrcode: base64Qrimg
+                        });
+                    }
+                }
+            });
+
+            // Jika client berhasil dibuat, kirim response sukses
+            if (!res.headersSent) {
+                return res.json({
                     code: 200,
-                    status: 'success get qrcode',
-                    qrcode: base64Qrimg
-                })
+                    status: 'success connect',
+                    client
+                });
             }
-        }).then((client) => {
-            res.json({
-                code: 200,
-                status: 'success connect',
-                client
-            })
-        }).catch((error) => {
-            res.json({
+        } else {
+            // Jika client sudah ada, kirim response 'already connect'
+            if (!res.headersSent) {
+                return res.json({
+                    code: 200,
+                    status: 'already connect',
+                    client
+                });
+            }
+        }
+    } catch (error) {
+        if (!res.headersSent) {
+            return res.json({
                 code: 400,
                 status: 'failed connect',
-                erro
-            })
-        })
-    }else{
-        res.json({
-            code: 200,
-            status: 'already connect',
-            client
-        })
+                error
+            });
+        }
     }
-}
+};
+
 
 
 const disconnectWhatsapp = async (req, res) => {
@@ -53,7 +67,17 @@ const disconnectWhatsapp = async (req, res) => {
     }
 }
 
-const  sendMessageWhatsapp = async (req, res) => {
+const generatePdf = async (req,res) => {
+    if(client){
+        try {
+            
+        } catch (error) {
+            
+        }
+    }
+}
+
+const sendMessageWhatsapp = async (req, res) => {
     if(client){
         try {
             await client.sendText(req.body.to, req.body.message)
