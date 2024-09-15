@@ -1,5 +1,8 @@
 // const ws = require('ws')
 const venom = require('venom-bot')
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 let client;
 
 const connectWhatsapp = async (req, res) => {
@@ -67,15 +70,62 @@ const disconnectWhatsapp = async (req, res) => {
     }
 }
 
-const generatePdf = async (req,res) => {
-    if(client){
+const generatePdf = async (req, res) => {
+    if (client) {
         try {
+            const { message = "Hello, World!" } = req.body;
+
+            // Buat dokumen PDF
+            const doc = new PDFDocument();
+
+            // Path untuk menyimpan file PDF
+            const filePath = path.join(__dirname, 'example.pdf');
             
+            // Pipe output ke file
+            const writeStream = fs.createWriteStream(filePath);
+            doc.pipe(writeStream);
+
+            // Tambahkan teks ke PDF
+            doc.text(message);
+
+            // Selesaikan pembuatan PDF
+            doc.end();
+
+            // Tunggu sampai file selesai ditulis
+            writeStream.on('finish', () => {
+                res.json({
+                    code: 200,
+                    status: 'success generate pdf',
+                    doc: `http://localhost:5000/${path.basename(filePath)}`
+                });
+            });
+
+            // Error handling saat penulisan file
+            writeStream.on('error', (err) => {
+                res.json({
+                    code: 400,
+                    status: 'failed generate pdf',
+                    error: err.message
+                });
+            });
+
         } catch (error) {
-            
+            // Jika ada error pada blok try
+            res.json({
+                code: 400,
+                status: 'failed generate pdf',
+                error
+            });
         }
+    } else {
+        // Jika client tidak terhubung
+        res.json({
+            code: 400,
+            status: 'client not connected'
+        });
     }
-}
+};
+
 
 const sendMessageWhatsapp = async (req, res) => {
     if(client){
@@ -128,5 +178,6 @@ module.exports = {
     connectWhatsapp,
     disconnectWhatsapp,
     sendMessageWhatsapp,
-    getContactsWhatsapp
+    getContactsWhatsapp,
+    generatePdf
 }
