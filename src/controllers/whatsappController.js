@@ -85,19 +85,31 @@ const generatePdf = async (req, res) => {
             const writeStream = fs.createWriteStream(filePath);
             doc.pipe(writeStream);
 
-            // Tambahkan teks ke PDF
+            
             doc.text(message);
 
-            // Selesaikan pembuatan PDF
+            
             doc.end();
 
-            // Tunggu sampai file selesai ditulis
+            
             writeStream.on('finish', () => {
-                res.json({
-                    code: 200,
-                    status: 'success generate pdf',
-                    doc: `http://localhost:5000/${path.basename(filePath)}`
-                });
+                try {
+                    client.sendFile(req.body.to, filePath,'undan.pdf',`Undangan ${req.body.to}`);
+
+                    res.json({
+                        code: 200,
+                        status: 'success generate pdf',
+                        doc: `http://localhost:5000/${path.basename(filePath)}`
+                    });
+
+                } catch (error) {
+                    res.json({
+                        code: 400,
+                        status: 'failed generate pdf',
+                        error: error.message
+                    });
+                    
+                }
             });
 
             // Error handling saat penulisan file
@@ -110,7 +122,6 @@ const generatePdf = async (req, res) => {
             });
 
         } catch (error) {
-            // Jika ada error pada blok try
             res.json({
                 code: 400,
                 status: 'failed generate pdf',
@@ -118,7 +129,6 @@ const generatePdf = async (req, res) => {
             });
         }
     } else {
-        // Jika client tidak terhubung
         res.json({
             code: 400,
             status: 'client not connected'
