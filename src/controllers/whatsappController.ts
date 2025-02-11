@@ -1,11 +1,9 @@
-import { Request, Response } from 'express';
 import { create, } from 'venom-bot';
-import fs from 'fs';
-import path from 'path';
+import { Request, Response } from 'express';
 let client: any;
 
 
-const connectWhatsapp = async (req, res) => {
+const connectWhatsapp = async (req: Request, res: Response): Promise<any> => {
     try {
         if (!client) {
             client = await create("whatsapp-bot", (base64Qrimg) => {
@@ -47,8 +45,7 @@ const connectWhatsapp = async (req, res) => {
     }
 };
 
-
-const disconnectWhatsapp = async (req, res) => {
+const disconnectWhatsapp = async (req: Request, res: Response): Promise<any>  => {
     if (client) {
         await client.destroy()
         res.json({
@@ -63,74 +60,7 @@ const disconnectWhatsapp = async (req, res) => {
     }
 }
 
-const generatePdf = async (req, res) => {
-    if (client) {
-        try {
-            const { message = "Hello, World!" } = req.body;
-
-            // Buat dokumen PDF
-            const doc = new PDFDocument();
-
-            // Path untuk menyimpan file PDF
-            const filePath = path.join(__dirname, 'example.pdf');
-            
-            // Pipe output ke file
-            const writeStream = fs.createWriteStream(filePath);
-            doc.pipe(writeStream);
-
-            
-            doc.text(message);
-
-            
-            doc.end();
-
-            
-            writeStream.on('finish', () => {
-                try {
-                    client.sendFile(req.body.to, filePath,'undan.pdf',`Undangan ${req.body.to}`);
-
-                    res.json({
-                        code: 200,
-                        status: 'success generate pdf',
-                        doc: `http://localhost:5000/${path.basename(filePath)}`
-                    });
-
-                } catch (error) {
-                    res.json({
-                        code: 400,
-                        status: 'failed generate pdf',
-                        error: error.message
-                    });
-                    
-                }
-            });
-
-            // Error handling saat penulisan file
-            writeStream.on('error', (err) => {
-                res.json({
-                    code: 400,
-                    status: 'failed generate pdf',
-                    error: err.message
-                });
-            });
-
-        } catch (error) {
-            res.json({
-                code: 400,
-                status: 'failed generate pdf',
-                error
-            });
-        }
-    } else {
-        res.json({
-            code: 400,
-            status: 'client not connected'
-        });
-    }
-};
-
-
-const sendMessageWhatsapp = async (req, res) => {
+const sendMessageWhatsapp = async (req: Request, res: Response): Promise<any>  => {
     if(client){
         try {
             await client.sendText(req.body.to, req.body.message)
@@ -153,7 +83,7 @@ const sendMessageWhatsapp = async (req, res) => {
     }
 }
 
-const getContactsWhatsapp = async (req, res) => {
+const getContactsWhatsapp = async (req: Request, res: Response): Promise<any>  => {
     if(client){
         try {
             const contacts = await client.getAllContacts()
@@ -181,6 +111,5 @@ export {
     connectWhatsapp,
     disconnectWhatsapp,
     sendMessageWhatsapp,
-    getContactsWhatsapp,
-    generatePdf
+    getContactsWhatsapp
 }
