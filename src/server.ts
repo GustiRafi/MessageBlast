@@ -1,7 +1,8 @@
-require('dotenv').config()
-const app = require('./app')
-const consola = require('consola')
-const router = require('./routes')
+import dotenv from 'dotenv'
+import app from './app'
+import consola from 'consola'
+import router from './routes'
+
 
 const port = process.env.PORT;
 

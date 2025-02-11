@@ -6,4 +6,4 @@ const corsConfig = {
     allowedHeaders: ['Content-Type', 'Authorization']
 }
 
-module.exports = corsConfig
+export default corsConfig

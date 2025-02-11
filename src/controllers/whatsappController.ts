@@ -1,26 +1,20 @@
-// const ws = require('ws')
-const venom = require('venom-bot')
-const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
-let client;
+import { Request, Response } from 'express';
+import { create, } from 'venom-bot';
+import fs from 'fs';
+import path from 'path';
+let client: any;
+
 
 const connectWhatsapp = async (req, res) => {
     try {
         if (!client) {
-            client = await venom.create({
-                session: "sender",
-                multidevice: true,
-                headless: true,
-                catchQR: (base64Qrimg) => {
-                    // Pastikan hanya mengirim response QR code jika belum ada yang dikirim
-                    if (!res.headersSent) {
-                        return res.json({
-                            code: 200,
-                            status: 'success get qrcode',
-                            qrcode: base64Qrimg
-                        });
-                    }
+            client = await create("whatsapp-bot", (base64Qrimg) => {
+                if (!res.headersSent) {
+                    return res.json({
+                        code: 200,
+                        status: 'success get qrcode',
+                        qrcode: base64Qrimg
+                    });
                 }
             });
 
@@ -52,7 +46,6 @@ const connectWhatsapp = async (req, res) => {
         }
     }
 };
-
 
 
 const disconnectWhatsapp = async (req, res) => {
@@ -184,7 +177,7 @@ const getContactsWhatsapp = async (req, res) => {
     }
 }
 
-module.exports = {
+export {
     connectWhatsapp,
     disconnectWhatsapp,
     sendMessageWhatsapp,

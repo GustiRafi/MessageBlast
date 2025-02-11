@@ -1,5 +1,5 @@
-const express = require("express");
-const { getContactsWhatsapp, connectWhatsapp, disconnectWhatsapp, sendMessageWhatsapp, generatePdf } = require("../../controllers/whatsappController");
+import express from 'express';
+import { getContactsWhatsapp, connectWhatsapp, disconnectWhatsapp, sendMessageWhatsapp, generatePdf } from '../../controllers/whatsappController';
 
 const router = express.Router();
 
@@ -9,4 +9,4 @@ router.post('/sendMessage', sendMessageWhatsapp)
 router.get('/contacts', getContactsWhatsapp)
 router.post('/generatePdf', generatePdf)
 
-module.exports = router
+export default router
