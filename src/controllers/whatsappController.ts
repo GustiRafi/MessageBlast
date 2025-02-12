@@ -1,31 +1,30 @@
 import { create, } from 'venom-bot';
 import { Request, Response } from 'express';
 let client: any;
+let qr = '';
 
 
 const connectWhatsapp = async (req: Request, res: Response): Promise<any> => {
     try {
         if (!client) {
-            client = await create("whatsapp-bot", (base64Qrimg) => {
-                if (!res.headersSent) {
-                    return res.json({
+            client = await create(
+                'sender-session',
+                (base64Qrimg) => {
+                    qr = base64Qrimg;
+                    return  res.json({
                         code: 200,
-                        status: 'success get qrcode',
-                        qrcode: base64Qrimg
-                    });
+                        status: 'SUCCESS get qr',
+                        qr
+                   });
+                },
+                undefined,
+                {
+                    headless: "new",
+                    disableWelcome: true,
+                    logQR: false,
                 }
-            });
-
-            // Jika client berhasil dibuat, kirim response sukses
-            if (!res.headersSent) {
-                return res.json({
-                    code: 200,
-                    status: 'success connect',
-                    client
-                });
-            }
+            );
         } else {
-            // Jika client sudah ada, kirim response 'already connect'
             if (!res.headersSent) {
                 return res.json({
                     code: 200,
@@ -34,14 +33,13 @@ const connectWhatsapp = async (req: Request, res: Response): Promise<any> => {
                 });
             }
         }
-    } catch (error) {
-        if (!res.headersSent) {
-            return res.json({
-                code: 400,
-                status: 'failed connect',
-                error
-            });
-        }
+    } catch (error: any) {
+        console.log('Error:', error)
+        return res.json({
+            code: 400,
+            status: 'failed connect',
+            error: error.message
+        });
     }
 };
 
