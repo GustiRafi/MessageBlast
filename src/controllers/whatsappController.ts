@@ -1,113 +1,90 @@
-import { create, } from 'venom-bot';
-import { Request, Response } from 'express';
-let client: any;
-let qr = '';
+import { create,Whatsapp } from 'venom-bot';
+import { Request, Response } from 'express'; 
+import { stat } from 'fs';
 
 
-const connectWhatsapp = async (req: Request, res: Response): Promise<any> => {
+let client: Whatsapp | null = null;
+let qr: string = '';
+
+const connect = async (req: Request, res: Response): Promise<any> => {
     try {
-        if (!client) {
-            client = await create(
-                'sender-session',
-                (base64Qrimg) => {
-                    qr = base64Qrimg;
-                    return  res.json({
-                        code: 200,
-                        status: 'SUCCESS get qr',
-                        qr
-                   });
-                },
-                undefined,
-                {
-                    headless: "new",
-                    disableWelcome: true,
-                    logQR: false,
-                }
-            );
-        } else {
-            if (!res.headersSent) {
-                return res.json({
+       client = await create(
+            'sender-session',
+            (base64Qrimg) => {
+                qr = base64Qrimg;
+                res.status(200).json({
                     code: 200,
-                    status: 'already connect',
-                    client
+                    status: 'QR Code ready',
+                    qr: qr
                 });
+            },
+            undefined,
+            {
+                headless: "new",
+                disableWelcome: true,
+                logQR: false,
             }
-        }
+        )
+        res.status(200).json({
+            code: 200,
+            status: 'Connected to WhatsApp',
+        });
     } catch (error: any) {
         console.log('Error:', error)
-        return res.json({
-            code: 400,
+        res.status(500).json({
+            code: 500,
             status: 'failed connect',
             error: error.message
         });
     }
 };
 
-const disconnectWhatsapp = async (req: Request, res: Response): Promise<any>  => {
-    if (client) {
-        await client.destroy()
-        res.json({
+const disconnect = async (req: Request, res: Response): Promise<any>  => {
+    try {
+        await client?.logout();
+
+        res.status(200).json({
             code: 200,
-            status: 'success disconnect'
-        })
-    } else {
+            status: 'Disconnected from WhatsApp',
+        });
+    } catch (error: any) {
+        console.log('Error:', error)
         res.json({
             code: 400,
-            status: 'failed disconnect'
-        })
+            status: 'failed disconnect',
+            error: error.message
+        });
     }
 }
 
 const sendMessageWhatsapp = async (req: Request, res: Response): Promise<any>  => {
-    if(client){
-        try {
-            await client.sendText(req.body.to, req.body.message)
-            res.json({
-                code: 200,
-                status: 'success send message'
-            })
-        } catch (error) {
-            res.json({
+    const { to, message } = req.body;
+    try {
+        if (!client) {
+            res.status(400).json({
                 code: 400,
-                status: 'failed send message',
-                error
-            })
+                status: 'error',
+                message: 'WhatsApp is not connected. Please connect first.'
+            });
         }
-    }else{
+        await client?.sendText(to, message);
+        res.json({
+            code: 200,
+            status: 'message sent',
+            message: message
+        });
+    } catch (error: any) {
+        console.log('Error:', error)
         res.json({
             code: 400,
-            status: 'failed connect'
-        })
-    }
-}
-
-const getContactsWhatsapp = async (req: Request, res: Response): Promise<any>  => {
-    if(client){
-        try {
-            const contacts = await client.getAllContacts()
-            res.json({
-                code: 200,
-                status: 'success get contacts',
-                contacts
-            })
-        } catch (error) {
-            res.json({
-                code: 400,
-                status: 'failed get contacts',
-                error
-            })
-        }
-    }else{
-        res.json({
-            code: 400,
-            status: 'failed connect'
-        })
+            status: 'failed send message',
+            error: error.message
+        });
     }
 }
 
 export {
-    connectWhatsapp,
-    disconnectWhatsapp,
+    connect,
+    disconnect,
     sendMessageWhatsapp,
-    getContactsWhatsapp
 }
