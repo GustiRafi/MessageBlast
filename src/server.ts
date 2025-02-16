@@ -2,11 +2,24 @@ import dotenv from 'dotenv'
 import app from './app'
 import consola from 'consola'
 import router from './routes'
+import http from 'http'
+import session from 'express-session'
+import { initWebSocket } from './utils/websocket'
 
 
 const port = process.env.PORT;
+const server = http.createServer(app)
 
 app.use('/api/v1', router)
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET || 'default-secret-key',
+        resave: false,
+        saveUninitialized: true
+    })
+)
+
+initWebSocket(server)
 
 app.listen(port, () => {
     consola.ready({
