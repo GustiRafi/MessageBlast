@@ -17,11 +17,12 @@ export const getContacts = async (req: Request, res: Response): Promise<any> => 
 
 export const addContact = async (req: Request, res: Response): Promise<any> => {
     try {
-        const { userId, contactId } = req.body;
+        const { userId, nama, phone } = req.body;
         const contact = await prisma.contact.create({
             data: {
-                user: { connect: { id: userId } },
-                contact: { connect: { id: contactId } }
+                userId,
+                "name": nama,
+                "phone": phone
             }
         });
         res.status(201).json(contact);
@@ -41,7 +42,7 @@ export const deleteContact = async (req: Request, res: Response): Promise<any> =
         const contact = await prisma.contact.deleteMany({
             where: {
                 userId: userId,
-                contactId: contactId
+                id: contactId
             }
         });
         res.status(200).json(contact);
@@ -61,7 +62,7 @@ export const editContact = async (req: Request, res: Response): Promise<any> => 
         const contact = await prisma.contact.updateMany({
             where: {
                 userId: userId,
-                contactId: contactId
+                id: contactId
             },
             data: {
                 name: name,
@@ -85,7 +86,7 @@ export const detailContact = async (req: Request, res: Response): Promise<any> =
         const contact = await prisma.contact.findMany({
             where: {
                 userId: userId,
-                contactId: contactId
+                id: contactId
             }
         });
         res.status(200).json(contact);
