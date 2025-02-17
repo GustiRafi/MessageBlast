@@ -30,14 +30,14 @@ export const register = async (req: Request, res: Response): Promise<any> => {
             { expiresIn: '1h' }
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             message: 'User registered successfully',
             user: { id: user.id, name: user.name, email: user.email },
             token,
         });
     } catch (error: any) {
         console.error('Error:', error);
-        res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: error.message });
     }
 };
 
@@ -61,21 +61,29 @@ export const login = async (req: Request, res: Response): Promise<any> => {
             { expiresIn: '1h' }
         );
 
-        res.status(200).json({
+        return res.status(200).json({
             message: 'Login successful',
             user: { id: user.id, name: user.name, email: user.email },
             token,
         });
     } catch (error) {
-        res.status(500).json({ error: (error as Error).message });
+        return res.status(500).json({ error: (error as Error).message });
     }
 }
 
 
 export const logout = async (req: Request, res: Response): Promise<any> => {
     try {
-        res.status(200).json({ message: 'Logout successful' });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Error destroying session:', err);
+                return res.status(500).json({ message: 'Logout failed' });
+            }
+        });
+
+        return res.json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('Error during logout:', error);
+        return res.status(500).json({ message: 'Internal server error' });
     }
 }
