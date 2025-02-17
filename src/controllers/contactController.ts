@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import prisma from '../config/db';
 
+interface AuthRequest extends Request {
+    user?: { id: string };
+}
+
 export const getContacts = async (req: Request, res: Response): Promise<any> => {
     try {
         const contacts = await prisma.user.findMany({ include: { contacts: true } }); 
@@ -15,9 +19,10 @@ export const getContacts = async (req: Request, res: Response): Promise<any> => 
     }
 }
 
-export const addContact = async (req: Request, res: Response): Promise<any> => {
+export const addContact = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
-        const { userId, nama, phone } = req.body;
+        const { nama, phone } = req.body;
+        const userId = Number(req.user?.id);
         const contact = await prisma.contact.create({
             data: {
                 userId,
@@ -36,9 +41,10 @@ export const addContact = async (req: Request, res: Response): Promise<any> => {
     }
 }
 
-export const deleteContact = async (req: Request, res: Response): Promise<any> => {
+export const deleteContact = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
-        const { userId, contactId } = req.body;
+        const contactId = Number(req.params.id);
+        const userId = Number(req.user?.id);
         const contact = await prisma.contact.deleteMany({
             where: {
                 userId: userId,
@@ -56,9 +62,11 @@ export const deleteContact = async (req: Request, res: Response): Promise<any> =
     }
 }
 
-export const editContact = async (req: Request, res: Response): Promise<any> => {
+export const editContact = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
-        const { userId, contactId, name, phone } = req.body;
+        const contactId = Number(req.params.id);
+        const userId = Number(req.body.userId);
+        const { name, phone } = req.body;
         const contact = await prisma.contact.updateMany({
             where: {
                 userId: userId,
@@ -80,9 +88,10 @@ export const editContact = async (req: Request, res: Response): Promise<any> => 
     }
 }
 
-export const detailContact = async (req: Request, res: Response): Promise<any> => {
+export const detailContact = async (req: AuthRequest, res: Response): Promise<any> => {
     try {
-        const { userId, contactId } = req.body;
+        const contactId = Number(req.params.id);
+        const userId = Number(req.body.userId);
         const contact = await prisma.contact.findMany({
             where: {
                 userId: userId,

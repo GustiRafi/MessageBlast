@@ -5,7 +5,9 @@ import jwt from 'jsonwebtoken';
 declare global {
     namespace Express {
         interface Request {
-            userId?: string;
+            user?: {
+                id: string;
+            };
         }
     }
 }
@@ -21,8 +23,10 @@ export const authenticateUser = (req: Request, res: Response, next: NextFunction
     }
 
     try {
-        const decoded = jwt.verify(token, SECRET_KEY) as unknown as { userId: string };
-        req.userId = decoded.userId;
+        const decoded = jwt.verify(token, SECRET_KEY) as unknown as {
+            id: string;
+        };
+        req.user = { id: decoded.id };
         next();
     } catch (error) {
         res.status(401).json({ status: 'error', message: 'Invalid token' });
